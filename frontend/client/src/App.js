@@ -7,11 +7,12 @@ function App() {
   const [accounts, setAccounts] = useState(undefined);
   const [contract, setContract] = useState(undefined);
   const [balance, setBalance] = useState(undefined);
- // const [currentTransfer, setCurrentTransfer] = useState(undefined);
   const [quorum, setQuorum] = useState(undefined);
-  const [transfers, setTransfers] = useState(undefined);
-  const [approvers, setApprovers] = useState(undefined);
+  const [transfers, setTransfers] = useState([]);
+  const [approvers, setApprovers] = useState([]);
   const [ids, setIds] = useState(undefined);
+  const [approval, setApproval] = useState(undefined);
+  
 
   useEffect(() => {
     const init = async () => {
@@ -38,10 +39,14 @@ function App() {
     });
   }, []);
 
-  useEffect(() => {
+  useEffect((e) => {
     if(typeof contract !== 'undefined' && typeof web3 !== 'undefined') {
       updateBalance();
       idds();
+      approvals();
+
+     
+      
       
       
     }
@@ -60,6 +65,7 @@ function App() {
       .createTransfer(amount, to)
       .send({from: accounts[0]});
    await idds();
+   await approvals();
   };
 
   async function sendTransfer(e) {
@@ -69,7 +75,7 @@ function App() {
       .sendTransfer(iid)
       .send({from: accounts[0]});
     await updateBalance();
-    
+    await approvals();
   };
 
 
@@ -89,11 +95,18 @@ function App() {
     setApprovers(appro); 
   } 
 
-  async function idds() {
-    const id = await contract.methods.nextId()
+  async function approvals() {
+   const id = (await contract.methods.nextId()
+    .call()) - 1;
+   const appra = await contract.methods.approvals(accounts[0], id)
     .call();
-   const ic = id - 1
-    setIds(ic); 
+    setApproval(appra);
+  }
+
+  async function idds() {
+    const id = (await contract.methods.nextId()
+    .call()) - 1;
+    setIds(id); 
   } 
 
 
@@ -133,9 +146,18 @@ function App() {
                  <div>
                    <label htmlFor="number">Id</label>
                    <input type="number" />
-                    <input type="submit" value ='Submit'/>              
+                                 
                  </div>
-                 </form>
+                 
+
+           {approval ? (
+                <p> Already approved</p>
+                ) : (
+                     <input type="submit" value ='Submit'/> 
+                )
+              } 
+
+              </form>
                  </div>
            </div>
 
@@ -152,6 +174,13 @@ function App() {
                  </div></form>       
            </div>
             <p> id: {transfers.id} </p>
+            <p> amount: {transfers.amount} </p>
+            <p> to: {transfers.to} </p>
+            <p> approvals: {transfers.approvals} </p>
+            <p> sent: {transfers.sent} </p>
+    
+            
+            
          </div>
   );
 }
