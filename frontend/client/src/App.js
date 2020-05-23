@@ -76,6 +76,9 @@ function App() {
       .send({from: accounts[0]});
     await updateBalance();
     await approvals();
+    const trans =  await contract.methods.transfers(iid)
+    .call();
+    setTransfers(trans);
   };
 
 
